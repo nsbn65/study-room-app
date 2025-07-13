@@ -1,0 +1,192 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* リセットとベース設定 */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+  
+  /* 学習アプリに適した明るいテーマ */
+  color-scheme: light;
+  color: #374151;
+  background-color: #f9fafb;
+  
+  /* フォントレンダリング最適化 */
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 基本要素のスタイリング */
+body {
+  margin: 0;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f9fafb;
+  color: #374151;
+}
+
+/* リンクスタイル（学習アプリに適した色） */
+a {
+  font-weight: 500;
+  color: #3b82f6;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+/* ヘッディング */
+h1, h2, h3, h4, h5, h6 {
+  color: #1f2937;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* ボタンの基本スタイル（Tailwindと競合しないように軽く設定） */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 入力フィールド */
+input, textarea, select {
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+/* フォーカススタイル */
+input:focus, textarea:focus, select:focus, button:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* スクロールバーのスタイリング（Webkit系ブラウザ） */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* 学習アプリ特有のアニメーション */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ユーティリティクラス */
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-pulse-custom {
+  animation: pulse 2s infinite;
+}
+
+/* カスタムシャドウ */
+.shadow-soft {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.shadow-medium {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* 学習時間タイマー用のスタイル */
+.timer-display {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* チャットメッセージ用のスタイル */
+.chat-message {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* レスポンシブデザイン用のヘルパー */
+@media (max-width: 640px) {
+  :root {
+    font-size: 14px;
+  }
+}
+
+/* プリントスタイル */
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+  
+  .no-print {
+    display: none;
+  }
+}
+
+/* ハイコントラストモード対応 */
+@media (prefers-contrast: high) {
+  :root {
+    color: #000000;
+    background-color: #ffffff;
+  }
+  
+  a {
+    color: #0000ff;
+  }
+  
+  button {
+    border: 2px solid #000000;
+  }
+}
+
+/* 動きを減らす設定に対応 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
