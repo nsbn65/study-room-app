@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Users, Play, Pause, Square, MessageCircle, Trophy, Home, PlusCircle } from 'lucide-react';
+import { Clock, Users, Play, Pause, Square, MessageCircle, Trophy, Home, PlusCircle, ArrowLeft, Send } from 'lucide-react';
 
 // 型定義
 interface Room {
@@ -25,12 +25,6 @@ interface StudyLog {
   minutes: number;
   subject: string;
   timestamp: string;
-}
-
-interface NewDiary {
-  date: string;
-  content: string;
-  emotion: number;
 }
 
 type TimerMode = 'study' | 'break';
@@ -109,6 +103,14 @@ const StudyRoomApp: React.FC = () => {
             setTimerMode('break');
             setTimerMinutes(5);
             setTimerSeconds(0);
+            // タイマー終了の通知メッセージ
+            const completionMessage: Message = {
+              id: Date.now(),
+              user: 'システム',
+              message: `${userName}さんが25分の学習を完了しました！お疲れ様です🎉`,
+              timestamp: new Date().toLocaleTimeString().slice(0, 5)
+            };
+            setMessages(prev => [...prev, completionMessage]);
           } else {
             setTimerMode('study');
             setTimerMinutes(25);
@@ -121,7 +123,7 @@ const StudyRoomApp: React.FC = () => {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isTimerRunning, timerMinutes, timerSeconds, timerMode]);
+  }, [isTimerRunning, timerMinutes, timerSeconds, timerMode, userName]);
 
   // 学習記録を追加
   const addStudyLog = (minutes: number): void => {
@@ -157,6 +159,15 @@ const StudyRoomApp: React.FC = () => {
         ? { ...r, participants: [...r.participants, userName], currentStudying: r.currentStudying + 1 }
         : r
     ));
+    
+    // 参加メッセージを追加
+    const joinMessage: Message = {
+      id: Date.now(),
+      user: 'システム',
+      message: `${userName}さんが参加しました！`,
+      timestamp: new Date().toLocaleTimeString().slice(0, 5)
+    };
+    setMessages(prev => [...prev, joinMessage]);
   };
 
   // 部屋から退出
@@ -200,18 +211,6 @@ const StudyRoomApp: React.FC = () => {
     setTimerSeconds(0);
   };
 
-  // 感情スコアから色を取得
-  const getEmotionColor = (score: number): string => {
-    const colors: Record<number, string> = {
-      1: 'bg-red-500',
-      2: 'bg-orange-500',
-      3: 'bg-yellow-500',
-      4: 'bg-blue-500',
-      5: 'bg-green-500'
-    };
-    return colors[score] || 'bg-gray-500';
-  };
-
   // 今日の学習時間を計算
   const getTodayStudyTime = (): number => {
     const today = new Date().toDateString();
@@ -235,7 +234,7 @@ const StudyRoomApp: React.FC = () => {
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-lg">
+        <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
           <div className="text-center mb-8">
             <div className="text-4xl mb-4">📚</div>
             <h1 className="text-2xl font-bold text-gray-800 mb-2">オンライン学習部屋</h1>
@@ -269,6 +268,7 @@ const StudyRoomApp: React.FC = () => {
     );
   }
 
+  // 学習部屋一覧画面
   const RoomsView: React.FC = () => (
     <div className="space-y-6">
       <div className="text-center">
@@ -325,7 +325,177 @@ const StudyRoomApp: React.FC = () => {
     </div>
   );
 
-  // 他のコンポーネントも同様にTypeScript化...
+  // 学習画面
+  const StudyView: React.FC = () => {
+    if (!currentRoom) return null;
+
+    return (
+      <div className="space-y-6">
+        {/* ヘッダー */}
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xl font-bold text-gray-800">{currentRoom.name}</h2>
+            <button
+              onClick={leaveRoom}
+              className="flex items-center space-x-2 text-red-600 hover:text-red-700 transition-colors"
+            >
+              <ArrowLeft size={16} />
+              <span>退出</span>
+            </button>
+          </div>
+          <p className="text-gray-600 text-sm">{currentRoom.description}</p>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* タイマーセクション */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* ポモドーロタイマー */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                  {timerMode === 'study' ? '📚 学習時間' : '☕ 休憩時間'}
+                </h3>
+                
+                <div className="timer-display text-6xl font-mono font-bold text-gray-800 mb-6">
+                  {String(timerMinutes).padStart(2, '0')}:{String(timerSeconds).padStart(2, '0')}
+                </div>
+                
+                <div className="flex justify-center space-x-4 mb-4">
+                  <button
+                    onClick={startTimer}
+                    disabled={isTimerRunning}
+                    className="flex items-center space-x-2 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white px-4 py-2 rounded-md transition-colors"
+                  >
+                    <Play size={16} />
+                    <span>開始</span>
+                  </button>
+                  
+                  <button
+                    onClick={pauseTimer}
+                    disabled={!isTimerRunning}
+                    className="flex items-center space-x-2 bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-400 text-white px-4 py-2 rounded-md transition-colors"
+                  >
+                    <Pause size={16} />
+                    <span>一時停止</span>
+                  </button>
+                  
+                  <button
+                    onClick={resetTimer}
+                    className="flex items-center space-x-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors"
+                  >
+                    <Square size={16} />
+                    <span>リセット</span>
+                  </button>
+                </div>
+                
+                <div className="text-sm text-gray-600">
+                  {timerMode === 'study' ? '集中して学習しましょう！' : 'リフレッシュしましょう！'}
+                </div>
+              </div>
+            </div>
+
+            {/* 今日の学習統計 */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">今日の学習</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">{getTodayStudyTime()}</div>
+                  <div className="text-sm text-gray-600">分</div>
+                  <div className="text-xs text-gray-500">学習時間</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">{Math.floor(getTodayStudyTime() / 25)}</div>
+                  <div className="text-sm text-gray-600">セッション</div>
+                  <div className="text-xs text-gray-500">完了数</div>
+                </div>
+              </div>
+              <div className="mt-4">
+                <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                  <span>目標進捗</span>
+                  <span>{Math.round((getTodayStudyTime() / dailyGoal) * 100)}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${Math.min((getTodayStudyTime() / dailyGoal) * 100, 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* サイドバー */}
+          <div className="space-y-6">
+            {/* 参加者一覧 */}
+            <div className="bg-white rounded-lg shadow-md p-4">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <Users size={18} className="mr-2" />
+                参加者 ({currentRoom.participants.length})
+              </h3>
+              <div className="space-y-2">
+                {currentRoom.participants.map((participant, index) => (
+                  <div key={index} className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                      {participant[0]}
+                    </div>
+                    <span className="text-sm text-gray-700">
+                      {participant}
+                      {participant === userName && <span className="text-blue-600 ml-1">(あなた)</span>}
+                    </span>
+                    {Math.random() > 0.5 && <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse-custom" title="学習中"></div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* チャット */}
+            <div className="bg-white rounded-lg shadow-md p-4">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <MessageCircle size={18} className="mr-2" />
+                チャット
+              </h3>
+              
+              <div className="h-64 overflow-y-auto border border-gray-200 rounded-md p-3 mb-3 space-y-2">
+                {messages.map((message) => (
+                  <div key={message.id} className="chat-message">
+                    <div className="flex items-start space-x-2">
+                      <div className="w-6 h-6 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center text-white text-xs font-medium shrink-0">
+                        {message.user[0]}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-medium text-gray-800">{message.user}</span>
+                          <span className="text-xs text-gray-500">{message.timestamp}</span>
+                        </div>
+                        <p className="text-sm text-gray-700 break-words">{message.message}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="メッセージを入力..."
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  onKeyPress={handleKeyPress}
+                />
+                <button
+                  onClick={sendMessage}
+                  className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-md transition-colors"
+                >
+                  <Send size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -342,7 +512,7 @@ const StudyRoomApp: React.FC = () => {
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         {currentView === 'rooms' && <RoomsView />}
-        {/* 他のビューも同様に */}
+        {currentView === 'study' && <StudyView />}
       </main>
     </div>
   );
