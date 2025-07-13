@@ -139,10 +139,27 @@ const StudyRoomApp: React.FC = () => {
     setStudyLog(prev => [newLog, ...prev]);
   };
 
+  useEffect(() => {
+    const savedLogin = localStorage.getItem('isLoggedIn');
+    const savedUserName = localStorage.getItem('userName');
+    if (savedLogin === 'true' && savedUserName) {
+      setIsLoggedIn(true);
+      setUserName(savedUserName);
+      // メッセージも復元
+      setMessages([
+        { id: 1, user: 'システム', message: 'みなさん、集中して頑張りましょう！', timestamp: '10:30' },
+        { id: 2, user: 'はなこ', message: 'おはようございます！今日もよろしくお願いします', timestamp: '10:32' },
+        { id: 3, user: 'ゆうた', message: 'React勉強中です。一緒に頑張りましょう', timestamp: '10:35' }
+      ]);
+    }
+  }, []);
+  
   // ログイン処理
   const handleLogin = (): void => {
     if (userName.trim()) {
       setIsLoggedIn(true);
+      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('userName', userName);
       setMessages([
         { id: 1, user: 'システム', message: 'みなさん、集中して頑張りましょう！', timestamp: '10:30' },
         { id: 2, user: 'はなこ', message: 'おはようございます！今日もよろしくお願いします', timestamp: '10:32' },
