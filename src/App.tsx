@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, Users, Play, Pause, Square, MessageCircle, Trophy, Home, PlusCircle, ArrowLeft, Send } from 'lucide-react';
+import { FaPen } from 'react-icons/fa';
 
 // 型定義
 interface Room {
@@ -236,7 +237,7 @@ const StudyRoomApp: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
           <div className="text-center mb-8">
-            <div className="text-4xl mb-4">📚</div>
+            <div className="text-4xl mb-4 text-center"><FaPen className='text-blue-500 mx-auto' /></div>
             <h1 className="text-2xl font-bold text-gray-800 mb-2">オンライン学習部屋</h1>
             <p className="text-gray-600">みんなで一緒に勉強しましょう</p>
           </div>
