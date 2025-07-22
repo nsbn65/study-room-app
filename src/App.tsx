@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Users, Play, Pause, Square, MessageCircle, Trophy, Home, PlusCircle, ArrowLeft, Send } from 'lucide-react';
+import { Clock, Users, Play, Pause, Square, MessageCircle, Trophy, Home, PlusCircle, ArrowLeft, Send, LogOut, Menu, X } from 'lucide-react';
 import { FaPen } from 'react-icons/fa';
 
 // 型定義
@@ -38,6 +38,9 @@ const StudyRoomApp: React.FC = () => {
   const [userName, setUserName] = useState<string>('');
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   
+  // SPのハンバーガーメニュー
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+
   // タイマー関連
   const [timerMinutes, setTimerMinutes] = useState<number>(25);
   const [timerSeconds, setTimerSeconds] = useState<number>(0);
@@ -52,6 +55,13 @@ const StudyRoomApp: React.FC = () => {
   // チャット
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>('');
+  
+  // 部屋作成モーダル
+  const [showCreateRoomModal, setShowCreateRoomModal] = useState<boolean>(false);
+  const [newRoomName, setNewRoomName] = useState<string>('');
+  const [newRoomDescription, setNewRoomDescription] = useState<string>('');
+  const [newRoomCategory, setNewRoomCategory] = useState<'programming' | 'certification' | 'language'>('programming');
+  const [newRoomMaxParticipants, setNewRoomMaxParticipants] = useState<number>(6);
   
   // 学習部屋データ
   const [rooms, setRooms] = useState<Room[]>([
@@ -139,13 +149,13 @@ const StudyRoomApp: React.FC = () => {
     setStudyLog(prev => [newLog, ...prev]);
   };
 
+  // 初期化時のローカルストレージチェック
   useEffect(() => {
     const savedLogin = localStorage.getItem('isLoggedIn');
     const savedUserName = localStorage.getItem('userName');
     if (savedLogin === 'true' && savedUserName) {
       setIsLoggedIn(true);
       setUserName(savedUserName);
-      // メッセージも復元
       setMessages([
         { id: 1, user: 'システム', message: 'みなさん、集中して頑張りましょう！', timestamp: '10:30' },
         { id: 2, user: 'はなこ', message: 'おはようございます！今日もよろしくお願いします', timestamp: '10:32' },
@@ -165,6 +175,43 @@ const StudyRoomApp: React.FC = () => {
         { id: 2, user: 'はなこ', message: 'おはようございます！今日もよろしくお願いします', timestamp: '10:32' },
         { id: 3, user: 'ゆうた', message: 'React勉強中です。一緒に頑張りましょう', timestamp: '10:35' }
       ]);
+    }
+  };
+
+  // ログアウト処理
+  const handleLogout = (): void => {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userName');
+    setIsLoggedIn(false);
+    setUserName('');
+    setCurrentView('rooms');
+    setCurrentRoom(null);
+    setIsTimerRunning(false);
+    setMessages([]);
+    setStudyLog([]);
+  };
+
+  // 部屋作成処理
+  const createRoom = (): void => {
+    if (newRoomName.trim() && newRoomDescription.trim()) {
+      const newRoom: Room = {
+        id: Date.now(),
+        name: newRoomName,
+        description: newRoomDescription,
+        participants: [],
+        currentStudying: 0,
+        maxParticipants: newRoomMaxParticipants,
+        category: newRoomCategory
+      };
+      
+      setRooms(prev => [...prev, newRoom]);
+      
+      // フォームリセット
+      setNewRoomName('');
+      setNewRoomDescription('');
+      setNewRoomCategory('programming');
+      setNewRoomMaxParticipants(6);
+      setShowCreateRoomModal(false);
     }
   };
 
@@ -285,6 +332,104 @@ const StudyRoomApp: React.FC = () => {
       </div>
     );
   }
+
+  // 部屋作成モーダル
+  const CreateRoomModal: React.FC = () => {
+    if (!showCreateRoomModal) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">新しい学習部屋を作成</h3>
+            <button
+              onClick={() => setShowCreateRoomModal(false)}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              ✕
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                部屋名
+              </label>
+              <input
+                type="text"
+                value={newRoomName}
+                onChange={(e) => setNewRoomName(e.target.value)}
+                placeholder="例: React学習部屋"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                説明
+              </label>
+              <textarea
+                value={newRoomDescription}
+                onChange={(e) => setNewRoomDescription(e.target.value)}
+                placeholder="部屋の説明を入力してください"
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                カテゴリ
+              </label>
+              <select
+                value={newRoomCategory}
+                onChange={(e) => setNewRoomCategory(e.target.value as 'programming' | 'certification' | 'language')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="programming">プログラミング</option>
+                <option value="certification">資格試験</option>
+                <option value="language">語学学習</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                最大参加者数: {newRoomMaxParticipants}人
+              </label>
+              <input
+                type="range"
+                min="2"
+                max="20"
+                value={newRoomMaxParticipants}
+                onChange={(e) => setNewRoomMaxParticipants(Number(e.target.value))}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>2人</span>
+                <span>20人</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex space-x-3 mt-6">
+            <button
+              onClick={() => setShowCreateRoomModal(false)}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              キャンセル
+            </button>
+            <button
+              onClick={createRoom}
+              disabled={!newRoomName.trim() || !newRoomDescription.trim()}
+              className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-md transition-colors"
+            >
+              作成
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // 統計画面
   const StatsView: React.FC = () => {
@@ -492,13 +637,34 @@ const StudyRoomApp: React.FC = () => {
         <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">学習部屋を選択</h2>
         <p className="text-gray-600">仲間と一緒に集中して学習しましょう</p>
       </div>
+
+      {/* 部屋作成ボタン */}
+      <div className="flex justify-center">
+        <button
+          onClick={() => setShowCreateRoomModal(true)}
+          className="flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-md transition-colors shadow-md"
+        >
+          <PlusCircle size={20} />
+          <span>新しい部屋を作成</span>
+        </button>
+      </div>
   
       <div className="grid gap-4 md:gap-6">
         {rooms.map((room: Room) => (
           <div key={room.id} className="bg-white rounded-lg shadow-md p-4 md:p-6 border-l-4 border-l-blue-500">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 gap-2">
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-800">{room.name}</h3>
+                <div className="flex items-center space-x-2 mb-1">
+                  <h3 className="text-lg font-semibold text-gray-800">{room.name}</h3>
+                  <span className={`px-2 py-1 text-xs rounded-full ${
+                    room.category === 'programming' ? 'bg-blue-100 text-blue-800' :
+                    room.category === 'certification' ? 'bg-green-100 text-green-800' :
+                    'bg-purple-100 text-purple-800'
+                  }`}>
+                    {room.category === 'programming' ? 'プログラミング' :
+                     room.category === 'certification' ? '資格試験' : '語学学習'}
+                  </span>
+                </div>
                 <p className="text-gray-600 text-sm">{room.description}</p>
               </div>
               <div className="flex items-center space-x-2 text-sm text-gray-500 shrink-0">
@@ -531,9 +697,10 @@ const StudyRoomApp: React.FC = () => {
               
               <button
                 onClick={() => joinRoom(room)}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors w-full sm:w-auto"
+                disabled={room.participants.length >= room.maxParticipants}
+                className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white px-4 py-2 rounded-md transition-colors w-full sm:w-auto"
               >
-                参加する
+                {room.participants.length >= room.maxParticipants ? '満員' : '参加する'}
               </button>
             </div>
           </div>
@@ -716,11 +883,13 @@ const StudyRoomApp: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white shadow-sm border-b relative">
         <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
+          {/* デスクトップ表示 (md以上) */}
+          <div className="hidden md:flex justify-between items-center">
             <h1 className="text-xl font-bold text-gray-800">オンライン学習部屋</h1>
-            <div className="flex items-center space-x-4">
+            
+            <div className="flex items-center space-x-8">
               {/* ナビゲーションメニュー */}
               <nav className="flex space-x-2">
                 <button
@@ -742,17 +911,98 @@ const StudyRoomApp: React.FC = () => {
                   統計
                 </button>
               </nav>
-              <span className="text-sm text-gray-600">こんにちは、{userName}さん</span>
+              
+              {/* ユーザー情報とログアウト */}
+              <div className="flex items-center space-x-3">
+                <span className="text-sm text-gray-600">こんにちは、{userName}さん</span>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center space-x-1 text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-md transition-colors"
+                  title="ログアウト"
+                >
+                  <LogOut size={16} />
+                  <span className="text-sm">ログアウト</span>
+                </button>
+              </div>
             </div>
           </div>
+
+          {/* モバイル表示 (md未満) */}
+          <div className="flex md:hidden justify-between items-center">
+            <h1 className="text-lg font-bold text-gray-800">オンライン学習部屋</h1>
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
+            >
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
+
+        {/* モバイルメニューのオーバーレイと本体 */}
+        {isMobileMenuOpen && (
+          <>
+            <div 
+              className="md:hidden fixed inset-0 z-40"
+              onClick={() => setIsMobileMenuOpen(false)}
+            ></div>
+            
+            {/* モバイルメニュー本体 */}
+            <div className="md:hidden absolute top-full left-0 right-0 bg-white shadow-lg z-50">
+              <div className="px-4 py-3 space-y-3">
+                {/* ナビゲーションメニュー */}
+                <nav className="space-y-2">
+                  <button
+                    onClick={() => {
+                      setCurrentView('rooms');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors flex items-center ${
+                      currentView === 'rooms' ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    <Home size={16} className="mr-2" />
+                    部屋一覧
+                  </button>
+                  <button
+                    onClick={() => {
+                      setCurrentView('stats');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors flex items-center ${
+                      currentView === 'stats' ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    <Trophy size={16} className="mr-2" />
+                    統計
+                  </button>
+                </nav>
+
+                {/* ユーザー情報 */}
+                <div className="flex items-center justify-between pt-3 border-t">
+                  <span className="text-sm text-gray-600">こんにちは、{userName}さん</span>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center space-x-1 text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-md transition-colors"
+                  >
+                    <LogOut size={16} />
+                    <span className="text-sm">ログアウト</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="max-w-6xl mx-auto min-h-screen px-4 py-8 md:px-6 md:py-12">
         {currentView === 'rooms' && <RoomsView />}
         {currentView === 'study' && <StudyView />}
         {currentView === 'stats' && <StatsView />}
       </main>
+      
+      {/* 部屋作成モーダル */}
+      <CreateRoomModal />
     </div>
   );
 };
