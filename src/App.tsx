@@ -10,7 +10,7 @@ interface Room {
   participants: string[];
   currentStudying: number;
   maxParticipants: number;
-  category: 'programming' | 'certification' | 'language';
+  category: 'programming' | 'certification' | 'language' | 'test' | 'report' | 'self-development' | 'other';
 }
 
 interface Message {
@@ -30,6 +30,133 @@ interface StudyLog {
 
 type TimerMode = 'study' | 'break';
 type ViewType = 'rooms' | 'study' | 'stats';
+
+// CreateRoomModalを外部に移動
+const CreateRoomModal: React.FC<{
+  showCreateRoomModal: boolean;
+  setShowCreateRoomModal: (show: boolean) => void;
+  newRoomName: string;
+  setNewRoomName: (name: string) => void;
+  newRoomDescription: string;
+  setNewRoomDescription: (desc: string) => void;
+  // この行を修正
+  newRoomCategory: 'programming' | 'certification' | 'language' | 'test' | 'report' | 'self-development' | 'other';
+  setNewRoomCategory: (cat: 'programming' | 'certification' | 'language' | 'test' | 'report' | 'self-development' | 'other') => void;
+  newRoomMaxParticipants: number;
+  setNewRoomMaxParticipants: (max: number) => void;
+  createRoom: () => void;
+}> = ({
+  showCreateRoomModal,
+  setShowCreateRoomModal,
+  newRoomName,
+  setNewRoomName,
+  newRoomDescription,
+  setNewRoomDescription,
+  newRoomCategory,
+  setNewRoomCategory,
+  newRoomMaxParticipants,
+  setNewRoomMaxParticipants,
+  createRoom
+}) => {
+  if (!showCreateRoomModal) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">新しい学習部屋を作成</h3>
+          <button
+            onClick={() => setShowCreateRoomModal(false)}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            ✕
+          </button>
+        </div>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              部屋名
+            </label>
+            <input
+              type="text"
+              value={newRoomName}
+              onChange={(e) => setNewRoomName(e.target.value)}
+              placeholder="例: React学習部屋"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              説明
+            </label>
+            <textarea
+              value={newRoomDescription}
+              onChange={(e) => setNewRoomDescription(e.target.value)}
+              placeholder="部屋の説明を入力してください"
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              カテゴリ
+            </label>
+            <select
+              value={newRoomCategory}
+              onChange={(e) => setNewRoomCategory(e.target.value as 'programming' | 'certification' | 'language')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="programming">プログラミング</option>
+              <option value="certification">資格試験</option>
+              <option value="language">語学学習</option>
+              <option value="test">テスト勉強</option>
+              <option value="report">レポート作成</option>
+              <option value="self-development">自己啓発</option>
+              <option value="other">その他</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              最大参加者数: {newRoomMaxParticipants}人
+            </label>
+            <input
+              type="range"
+              min="2"
+              max="20"
+              value={newRoomMaxParticipants}
+              onChange={(e) => setNewRoomMaxParticipants(Number(e.target.value))}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>2人</span>
+              <span>20人</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex space-x-3 mt-6">
+          <button
+            onClick={() => setShowCreateRoomModal(false)}
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            キャンセル
+          </button>
+          <button
+            onClick={createRoom}
+            disabled={!newRoomName.trim() || !newRoomDescription.trim()}
+            className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-md transition-colors"
+          >
+            作成
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const StudyRoomApp: React.FC = () => {
   // 状態管理（型指定付き）
@@ -60,7 +187,7 @@ const StudyRoomApp: React.FC = () => {
   const [showCreateRoomModal, setShowCreateRoomModal] = useState<boolean>(false);
   const [newRoomName, setNewRoomName] = useState<string>('');
   const [newRoomDescription, setNewRoomDescription] = useState<string>('');
-  const [newRoomCategory, setNewRoomCategory] = useState<'programming' | 'certification' | 'language'>('programming');
+  const [newRoomCategory, setNewRoomCategory] = useState<'programming' | 'certification' | 'language' | 'test' | 'report' | 'self-development' | 'other'>('programming');
   const [newRoomMaxParticipants, setNewRoomMaxParticipants] = useState<number>(6);
   
   // 学習部屋データ
@@ -333,104 +460,6 @@ const StudyRoomApp: React.FC = () => {
     );
   }
 
-  // 部屋作成モーダル
-  const CreateRoomModal: React.FC = () => {
-    if (!showCreateRoomModal) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-gray-800">新しい学習部屋を作成</h3>
-            <button
-              onClick={() => setShowCreateRoomModal(false)}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              ✕
-            </button>
-          </div>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                部屋名
-              </label>
-              <input
-                type="text"
-                value={newRoomName}
-                onChange={(e) => setNewRoomName(e.target.value)}
-                placeholder="例: React学習部屋"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                説明
-              </label>
-              <textarea
-                value={newRoomDescription}
-                onChange={(e) => setNewRoomDescription(e.target.value)}
-                placeholder="部屋の説明を入力してください"
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                カテゴリ
-              </label>
-              <select
-                value={newRoomCategory}
-                onChange={(e) => setNewRoomCategory(e.target.value as 'programming' | 'certification' | 'language')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="programming">プログラミング</option>
-                <option value="certification">資格試験</option>
-                <option value="language">語学学習</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                最大参加者数: {newRoomMaxParticipants}人
-              </label>
-              <input
-                type="range"
-                min="2"
-                max="20"
-                value={newRoomMaxParticipants}
-                onChange={(e) => setNewRoomMaxParticipants(Number(e.target.value))}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>2人</span>
-                <span>20人</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex space-x-3 mt-6">
-            <button
-              onClick={() => setShowCreateRoomModal(false)}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              キャンセル
-            </button>
-            <button
-              onClick={createRoom}
-              disabled={!newRoomName.trim() || !newRoomDescription.trim()}
-              className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-md transition-colors"
-            >
-              作成
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   // 統計画面
   const StatsView: React.FC = () => {
     // 週間データを生成（実際のアプリでは実データを使用）
@@ -659,10 +688,19 @@ const StudyRoomApp: React.FC = () => {
                   <span className={`px-2 py-1 text-xs rounded-full ${
                     room.category === 'programming' ? 'bg-blue-100 text-blue-800' :
                     room.category === 'certification' ? 'bg-green-100 text-green-800' :
-                    'bg-purple-100 text-purple-800'
+                    room.category === 'language' ? 'bg-purple-100 text-purple-800' :
+                    room.category === 'test' ? 'bg-yellow-100 text-yellow-800' :
+                    room.category === 'report' ? 'bg-red-100 text-red-800' :
+                    room.category === 'self-development' ? 'bg-indigo-100 text-indigo-800' :
+                    'bg-gray-100 text-gray-800'
                   }`}>
                     {room.category === 'programming' ? 'プログラミング' :
-                     room.category === 'certification' ? '資格試験' : '語学学習'}
+                     room.category === 'certification' ? '資格試験' :
+                     room.category === 'language' ? '語学学習' :
+                     room.category === 'test' ? 'テスト勉強' :
+                     room.category === 'report' ? 'レポート作成' :
+                     room.category === 'self-development' ? '自己啓発' :
+                     'その他'}
                   </span>
                 </div>
                 <p className="text-gray-600 text-sm">{room.description}</p>
@@ -826,7 +864,7 @@ const StudyRoomApp: React.FC = () => {
                       {participant}
                       {participant === userName && <span className="text-blue-600 ml-1">(あなた)</span>}
                     </span>
-                    {Math.random() > 0.5 && <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse-custom" title="学習中"></div>}
+                    {Math.random() > 0.5 && <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="学習中"></div>}
                   </div>
                 ))}
               </div>
@@ -1002,7 +1040,19 @@ const StudyRoomApp: React.FC = () => {
       </main>
       
       {/* 部屋作成モーダル */}
-      <CreateRoomModal />
+      <CreateRoomModal 
+        showCreateRoomModal={showCreateRoomModal}
+        setShowCreateRoomModal={setShowCreateRoomModal}
+        newRoomName={newRoomName}
+        setNewRoomName={setNewRoomName}
+        newRoomDescription={newRoomDescription}
+        setNewRoomDescription={setNewRoomDescription}
+        newRoomCategory={newRoomCategory}
+        setNewRoomCategory={setNewRoomCategory}
+        newRoomMaxParticipants={newRoomMaxParticipants}
+        setNewRoomMaxParticipants={setNewRoomMaxParticipants}
+        createRoom={createRoom}
+      />
     </div>
   );
 };
