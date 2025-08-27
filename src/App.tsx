@@ -31,7 +31,6 @@ interface StudyLog {
 type TimerMode = 'study' | 'break';
 type ViewType = 'rooms' | 'study' | 'stats';
 
-// CreateRoomModalを外部に移動
 const CreateRoomModal: React.FC<{
   showCreateRoomModal: boolean;
   setShowCreateRoomModal: (show: boolean) => void;
@@ -39,7 +38,6 @@ const CreateRoomModal: React.FC<{
   setNewRoomName: (name: string) => void;
   newRoomDescription: string;
   setNewRoomDescription: (desc: string) => void;
-  // この行を修正
   newRoomCategory: 'programming' | 'certification' | 'language' | 'test' | 'report' | 'self-development' | 'other';
   setNewRoomCategory: (cat: 'programming' | 'certification' | 'language' | 'test' | 'report' | 'self-development' | 'other') => void;
   newRoomMaxParticipants: number;
